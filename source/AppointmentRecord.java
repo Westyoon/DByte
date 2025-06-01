@@ -2,6 +2,11 @@
 import java.sql.*;
 import java.util.Scanner;
 
+/*통합 DB 완성하면 변수 수정해야 할 것 같습니다 ㅜ DB에는 user_id라고 저장했어요..
+ * 
+ * 90000 그리고 date 추가
+ * */
+
 public class AppointmentRecord {
 	static final String dbID = "testuser";
 	static final String dbPW = "testpw";
@@ -175,7 +180,7 @@ public class AppointmentRecord {
 
     //상담 기록 출력
     static void printConsultation(ResultSet rs) throws SQLException {
-        System.out.printf("(%d) 환자ID: %d | 기관ID: %d\n처방: %s | 진단: %s\n내용: %s\n\n",
+        System.out.printf("(%d) 환자ID: %d\t| 기관ID: %d\n처방: %s\t\t| 진단: %s\n내용: %s\n\n",
                 rs.getInt("appointmentId"),
                 rs.getInt("userId"),
                 rs.getInt("institutionId"),
