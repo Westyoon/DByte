@@ -6,13 +6,13 @@ import java.sql.SQLException;
 import java.math.BigDecimal;
 import java.util.Scanner;
 
-//일단 제 기준 돌아는 갑니다,,,
-//TABLE은 별도 자바 파일 써서 넣었고 CSV 파일은 자바로 하는게 전 에러가 많아서,,, CMD로 넣었습니다
-//하다보니까 INSTITUTION_ID 등 꽤 속성을 뭘로 맞출건지 안 정했더라고요, 애매한 감이 있어서 일단 INT로 했는데 회의 후 변경되면 수정하겠습니다
 public class InstitutionReview {
-    static final String DB_URL = "jdbc:mysql://localhost:3306/dbyte_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
-    static final String DB_USER = "testuser";
-    static final String DB_PASSWORD = "testpw";
+	static final String dbID = "testuser";
+	static final String dbPW = "testpw";
+	static final String dbName = "mindlink";
+	static final String header = "jdbc:mysql://localhost:3306/";
+	static final String encoding = "useUnicode=true&characterEncoding=UTF-8";
+	static final String url = header + dbName + "?" + encoding;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -25,7 +25,6 @@ public class InstitutionReview {
             System.out.println("4. 리뷰 삭제");
             System.out.println("5. 기관별 리뷰 통계 조회 ");
             System.out.println("6. 사용자별 리뷰 통계 조회");
-            System.out.println("7. 기관 평균 평점 조회");
             System.out.println("0. 종료");
             System.out.print("선택: ");
             int menuChoice = scanner.nextInt();
@@ -38,7 +37,6 @@ public class InstitutionReview {
                 case 4: deleteReview(scanner); break;
                 case 5: selectByInstitutionGroup(scanner); break;
                 case 6: selectByUserGroup(scanner); break;
-                case 7: showAverageRating(scanner); break;
                 case 0:
                     System.out.println("종료합니다.");
                     scanner.close();
@@ -58,19 +56,19 @@ public class InstitutionReview {
     // 1. 전체 조회 랭크 넣는건 여기가 나을 거 같아서 윈도우 OLAP 사용했습니다.
     static void selectAllReviews() {
         String sql =
-            "WITH review_with_avg AS (" +
-            "    SELECT review_id, user_id, institution_id, content, rating, " +
-            "           DATE_FORMAT(date, '%Y-%m-%d') AS formatted_date, " +
-            "           AVG(rating) OVER (PARTITION BY institution_id) AS institution_avg " +
+            "WITH reviewWithAvg AS (" +
+            "    SELECT reviewId, userId, institutionId, content, rating, " +
+            "           DATE_FORMAT(date, '%Y-%m-%d') AS formattedDate, " +
+            "           AVG(rating) OVER (PARTITION BY institutionId) AS institutionAvg " +
             "      FROM Reviews" +
             ") " +
-            "SELECT review_id, user_id, institution_id, content, rating, formatted_date, " +
-            "       institution_avg, " +
-            "       RANK() OVER (ORDER BY institution_avg DESC) AS institution_rank " +
-            "  FROM review_with_avg " +
-            "ORDER BY institution_avg DESC, formatted_date DESC";
+            "SELECT reviewId, userId, institutionId, content, rating, formattedDate, " +
+            "       institutionAvg, " +
+            "       RANK() OVER (ORDER BY institutionAvg DESC) AS institutionRank " +
+            "  FROM reviewWithAvg " +
+            "ORDER BY institutionAvg DESC, formattedDate DESC";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             printReviewResultsWithWindow(rs, "[전체 리뷰 + 기관평균평점/순위]");
@@ -101,8 +99,8 @@ public class InstitutionReview {
                 return;
             }
 
-            String sql = "INSERT INTO Reviews (user_id, institution_id, content, rating) VALUES (?, ?, ?, ?)";
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            String sql = "INSERT INTO Reviews (userId, institutionId, content, rating) VALUES (?, ?, ?, ?)";
+            try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setBigDecimal(1, userId);
                 pstmt.setInt(2, institutionId);
@@ -121,7 +119,7 @@ public class InstitutionReview {
     // 3. 수정(UPDATE)
     static void updateReview(Scanner scanner) {
         try {
-            System.out.print("수정할 리뷰번호(review_id): ");
+            System.out.print("수정할 리뷰번호(reviewId): ");
             BigDecimal reviewId = scanner.nextBigDecimal();
             scanner.nextLine();
             System.out.print("새 내용: ");
@@ -136,8 +134,8 @@ public class InstitutionReview {
                 System.out.println("리뷰 내용을 입력해주세요.");
                 return;
             }
-            String sql = "UPDATE Reviews SET content=?, rating=? WHERE review_id=?";
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            String sql = "UPDATE Reviews SET content=?, rating=? WHERE reviewId=?";
+            try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, newContent);
                 pstmt.setInt(2, newRating);
@@ -155,11 +153,11 @@ public class InstitutionReview {
     // 4. 삭제
     static void deleteReview(Scanner scanner) {
         try {
-            System.out.print("삭제할 리뷰번호(review_id): ");
+            System.out.print("삭제할 리뷰번호(reviewId): ");
             BigDecimal reviewId = scanner.nextBigDecimal();
 
-            String sql = "DELETE FROM Reviews WHERE review_id=?";
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            String sql = "DELETE FROM Reviews WHERE reviewId=?";
+            try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setBigDecimal(1, reviewId);
                 int result = pstmt.executeUpdate();
@@ -174,39 +172,62 @@ public class InstitutionReview {
 
     // 5. 기관별 리뷰 통계 조회 (GROUP BY/HAVING)
     static void selectByInstitutionGroup(Scanner scanner) {
-        try {
-            System.out.print("기관ID: ");
-            int institutionId = scanner.nextInt();
+        System.out.print("기관 ID를 입력하세요: ");
+        int institutionId = scanner.nextInt();
 
-            String sql =
-                "SELECT institution_id, user_id, COUNT(*) AS review_count, AVG(rating) AS avg_rating " +
-                "  FROM Reviews " +
-                " WHERE institution_id=? " +
-                "GROUP BY institution_id, user_id " +
-                "HAVING COUNT(*) >= 1 " +
-                "ORDER BY avg_rating DESC";
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, institutionId);
-                ResultSet rs = pstmt.executeQuery();
-                System.out.println("\n[기관별 사용자 리뷰 통계]");
-                boolean hasData = false;
+        String sql = 
+            "SELECT i.name, " +
+            "AVG(r.rating) OVER (PARTITION BY r.institutionId) AS institutionAvgRating, " +
+            "COUNT(*) OVER (PARTITION BY r.institutionId) AS reviewCount, " +
+            "r.institutionId, r.userId, r.reviewId, r.rating, r.date, r.content " +
+            "FROM Reviews r " +
+            "JOIN Institution i ON r.institutionId = i.institutionId " +
+            "WHERE r.institutionId = ? " +
+            "ORDER BY r.userId";
+
+        try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, institutionId);
+            ResultSet rs = pstmt.executeQuery();
+
+            System.out.println("\n[기관별 사용자 리뷰 통계]");
+
+            boolean hasData = false;
+
+            if (rs.next()) {
+                hasData = true;
+
+                System.out.printf("기관명: %s\t| 기관 ID: %d\t| 리뷰 수: %d개\t| 평균평점: %.2f\n", 
+                        rs.getString("name"),
+                        rs.getInt("institutionId"),
+                        rs.getInt("reviewCount"),
+                        rs.getDouble("institutionAvgRating"));
+
+                System.out.printf("→ 사용자:%d\t| 평점:%d\t\t| 내용: %s\n",
+                        rs.getInt("userId"),
+                        rs.getInt("rating"),
+                        rs.getString("content"));
+
                 while (rs.next()) {
-                    hasData = true;
-                    System.out.printf("기관:%d | 사용자:%d | 리뷰수:%d | 평균평점:%.2f\n",
-                        rs.getInt("institution_id"),
-                        rs.getBigDecimal("user_id").intValue(),
-                        rs.getInt("review_count"),
-                        rs.getDouble("avg_rating"));
+                    System.out.printf("→ 사용자:%d\t| 평점:%d\t\t| 내용: %s\n",
+                            rs.getInt("userId"),
+                            rs.getInt("rating"),
+                            rs.getString("content"));
                 }
-                if (!hasData) System.out.println("조회 결과가 없습니다.");
-            } catch (SQLException e) {
-                handleSQLException("기관별 통계 조회", e);
             }
+
+            if (!hasData) {
+                System.out.println("해당 기관에 대한 리뷰가 없습니다.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
         } catch (Exception e) {
             handleInputException(e);
         }
     }
+
 
     // 6. 사용자별 리뷰 통계 조회 (GROUP BY/HAVING)
     static void selectByUserGroup(Scanner scanner) {
@@ -214,27 +235,40 @@ public class InstitutionReview {
             System.out.print("사용자ID: ");
             BigDecimal userId = scanner.nextBigDecimal();
             String sql =
-                "SELECT user_id, institution_id, COUNT(*) AS review_count, AVG(rating) AS avg_rating " +
-                "  FROM Reviews " +
-                " WHERE user_id=? " +
-                "GROUP BY user_id, institution_id " +
-                "HAVING COUNT(*) >= 1 " +
-                "ORDER BY avg_rating DESC";
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            	    "SELECT r.userId, r.institutionId, (SELECT COUNT(*) FROM Reviews r3 WHERE r3.userId = r.userId) AS ReviewCount, AVG(rating), " +
+            	    "       (SELECT AVG(r2.rating) FROM Reviews r2 WHERE r2.userId = r.userId) AS userAvgRating " +
+            	    " FROM Reviews r " +
+            	    "WHERE r.userId = ? " +
+            	    "GROUP BY r.userId, r.institutionId " +
+            	    "HAVING COUNT(*) >= 1 ";
+            try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setBigDecimal(1, userId);
                 ResultSet rs = pstmt.executeQuery();
                 System.out.println("\n[사용자별 기관 리뷰 통계]");
-                boolean hasData = false;
-                while (rs.next()) {
-                    hasData = true;
-                    System.out.printf("사용자:%d | 기관:%d | 리뷰수:%d | 평균평점:%.2f\n",
-                        rs.getBigDecimal("user_id").intValue(),
-                        rs.getInt("institution_id"),
-                        rs.getInt("review_count"),
-                        rs.getDouble("avg_rating"));
-                }
-                if (!hasData) System.out.println("조회 결과가 없습니다.");
+
+        	    boolean hasData = false;
+
+        	    if (rs.next()) {
+        	        hasData = true;
+
+        	        System.out.printf("사용자:%d\t| 리뷰수:%d\t| 평균평점:%.2f\n",
+        	                rs.getInt("userId"),
+        	                rs.getInt("reviewCount"),
+        	                rs.getDouble("userAvgRating"));
+        	        System.out.printf("→ 기관:%d\t\t| 사용자 평점:%d\n",
+    	                    rs.getInt("institutionId"),
+    	                    rs.getInt("AVG(rating)"));
+        	        while (rs.next()) {
+        	            System.out.printf("→ 기관:%d\t\t| 사용자 평점:%d\n",
+        	            		rs.getInt("institutionId"),
+        	                    rs.getInt("AVG(rating)"));
+        	        }
+        	    }
+
+        	    if (!hasData) {
+        	        System.out.println("해당 사용자가 등록한 리뷰가 없습니다.");
+        	    }
             } catch (SQLException e) {
                 handleSQLException("사용자별 통계 조회", e);
             }
@@ -242,46 +276,6 @@ public class InstitutionReview {
             handleInputException(e);
         }
     }
-
-    // 7. 기관 평균 조회 
-    //조인 사용해서 원하는 기관의 평균 평점만 조회했습니다
-    static void showAverageRating(Scanner scanner) {
-        try {
-            System.out.print("기관ID: ");
-            int institutionId = scanner.nextInt();
-
-            String sql =
-                "SELECT i.name, r.institution_id, AVG(r.rating) AS average_rating " +
-                "  FROM Reviews r " +
-                "  JOIN Institution i ON r.institution_id = i.institution_id " +
-                " WHERE r.institution_id = ? " +
-                " GROUP BY r.institution_id, i.name";
-
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-                pstmt.setInt(1, institutionId);
-                ResultSet rs = pstmt.executeQuery();
-
-                System.out.println("\n[기관 평균 평점 조회]");
-                if (rs.next()) {
-                    System.out.printf(
-                        " 기관명: %s | 기관ID: %d | 평균평점: %.2f\n",
-                        rs.getString("name"),
-                        rs.getInt("institution_id"),
-                        rs.getDouble("average_rating")
-                    );
-                } else {
-                    System.out.println("해당 기관이 존재하지 않거나 리뷰가 없습니다.");
-                }
-            } catch (SQLException e) {
-                handleSQLException("평균 평점 조회", e);
-            }
-        } catch (Exception e) {
-            handleInputException(e);
-        }
-    }
-
 
 
     // 공통 출력 부분
@@ -291,14 +285,14 @@ public class InstitutionReview {
         while (rs.next()) {
             hasData = true;
             System.out.printf("번호:%d | 유저:%d | 기관:%d | 평점:%d | 내용:%s | 작성일:%s | 기관평균:%.2f | 기관순위:%d\n",
-                rs.getBigDecimal("review_id").intValue(),
-                rs.getBigDecimal("user_id").intValue(),
-                rs.getInt("institution_id"),
+                rs.getBigDecimal("reviewId").intValue(),
+                rs.getBigDecimal("userId").intValue(),
+                rs.getInt("institutionId"),
                 rs.getInt("rating"),
                 rs.getString("content"),
-                rs.getString("formatted_date"),
-                rs.getDouble("institution_avg"),
-                rs.getInt("institution_rank"));
+                rs.getString("formattedDate"),
+                rs.getDouble("institutionAvg"),
+                rs.getInt("institutionRank"));
         }
         if (!hasData) {
             System.out.println("조회 결과가 없습니다.");
@@ -314,4 +308,3 @@ public class InstitutionReview {
         System.out.println("입력 오류: " + e.getMessage());
     }
 }
-
