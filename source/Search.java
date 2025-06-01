@@ -119,7 +119,7 @@ public class Search {
 		System.out.println("0. 시스템 종료");
 	}
 	
-	public static void main(String[] args) {
+	public static void startSearch() {
 		Scanner scan = new Scanner(System.in);
 				
 		while(true) {
@@ -135,8 +135,7 @@ public class Search {
 				case 4: showInstitutionByRating(); break;
 				case 0:
 					System.out.println("시스템 종료");
-					scan.close();
-					System.exit(0);
+					return;
 				default: System.out.println("없는 메뉴"); continue;
 			}
 		}
