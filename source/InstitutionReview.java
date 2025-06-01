@@ -14,7 +14,7 @@ public class InstitutionReview {
 	static final String encoding = "useUnicode=true&characterEncoding=UTF-8";
 	static final String url = header + dbName + "?" + encoding;
 
-    public static void main(String[] args) {
+    public static void startInstitutionReview(int userId){
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
@@ -32,14 +32,13 @@ public class InstitutionReview {
 
             switch (menuChoice) {
                 case 1: selectAllReviews(); break;
-                case 2: createReview(scanner); break;
-                case 3: updateReview(scanner); break;
+                case 2: createReview(scanner, userId); break;
+                case 3: updateReview(scanner, userId); break;
                 case 4: deleteReview(scanner); break;
                 case 5: selectByInstitutionGroup(scanner); break;
                 case 6: selectByUserGroup(scanner); break;
                 case 0:
                     System.out.println("종료합니다.");
-                    scanner.close();
                     return;
                 default:
                     System.out.println("잘못된 선택입니다.");
@@ -78,10 +77,8 @@ public class InstitutionReview {
     }
 
     // 2. 등록
-    static void createReview(Scanner scanner) {
+    static void createReview(Scanner scanner, int userId) {
         try {
-            System.out.print("유저ID: ");
-            BigDecimal userId = scanner.nextBigDecimal();
             System.out.print("기관ID: ");
             int institutionId = scanner.nextInt();
             scanner.nextLine();
@@ -99,13 +96,15 @@ public class InstitutionReview {
                 return;
             }
 
-            String sql = "INSERT INTO Reviews (userId, institutionId, content, rating) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO Reviews (userId, institutionId, content, rating, date) VALUES (?, ?, ?, ?, ?)";
             try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setBigDecimal(1, userId);
+                pstmt.setInt(1, userId);
                 pstmt.setInt(2, institutionId);
                 pstmt.setString(3, content);
                 pstmt.setInt(4, rating);
+                java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+                pstmt.setTimestamp(5, now);
                 int result = pstmt.executeUpdate();
                 System.out.println(result + "건 등록 완료!");
             } catch (SQLException e) {
@@ -117,7 +116,7 @@ public class InstitutionReview {
     }
 
     // 3. 수정(UPDATE)
-    static void updateReview(Scanner scanner) {
+    static void updateReview(Scanner scanner, int userId) {
         try {
             System.out.print("수정할 리뷰번호(reviewId): ");
             BigDecimal reviewId = scanner.nextBigDecimal();
@@ -284,15 +283,16 @@ public class InstitutionReview {
         boolean hasData = false;
         while (rs.next()) {
             hasData = true;
-            System.out.printf("번호:%d | 유저:%d | 기관:%d | 평점:%d | 내용:%s | 작성일:%s | 기관평균:%.2f | 기관순위:%d\n",
+            System.out.printf("(%d) 유저:%d | 기관:%d\t| 기관평균:%.2f\t| 기관순위:%d\t| 평점:%d\t| 내용:%s\t| 작성일:%s\n",
                 rs.getBigDecimal("reviewId").intValue(),
                 rs.getBigDecimal("userId").intValue(),
                 rs.getInt("institutionId"),
+                rs.getDouble("institutionAvg"),
+                rs.getInt("institutionRank"),
                 rs.getInt("rating"),
                 rs.getString("content"),
-                rs.getString("formattedDate"),
-                rs.getDouble("institutionAvg"),
-                rs.getInt("institutionRank"));
+                rs.getString("formattedDate")                
+                );
         }
         if (!hasData) {
             System.out.println("조회 결과가 없습니다.");
