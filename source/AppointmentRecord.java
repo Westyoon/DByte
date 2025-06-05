@@ -1,11 +1,9 @@
-
 // 상담 기록 기능 구현을 위한 class 파일입니다. 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.math.BigDecimal;
 import java.util.Scanner;
 
 public class AppointmentRecord {
@@ -29,7 +27,7 @@ public class AppointmentRecord {
 
 	// 환자: 본인 상담 기록 조회
 	static void showPatientConsultations(int patientId) {
-		String sql = "SELECT * FROM PatientView WHERE userId = ?";
+		String sql = "SELECT * FROM PatientView WHERE userId = ? ORDER BY recordDate DESC";
 		try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
 				PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -48,7 +46,6 @@ public class AppointmentRecord {
 		} catch (SQLException e) {
 			System.out.println("오류: " + e.getMessage());
 		}
-		return;
 	}
 
 	// 의료인: DoctorView 사용해 기관 기록 관리
@@ -113,7 +110,7 @@ public class AppointmentRecord {
 
 	// 기관 내 모든 상담 기록 조회(DoctorView로 제한)
 	static void showConsultationsByInstitution(Connection conn, int institutionId) throws SQLException {
-		String sql = "SELECT * FROM DoctorView WHERE institutionId = ?";
+		String sql = "SELECT * FROM DoctorView WHERE institutionId = ? ORDER BY recordDate DESC";
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setInt(1, institutionId);
 			ResultSet rs = pstmt.executeQuery();
@@ -144,6 +141,7 @@ public class AppointmentRecord {
 
 			System.out.print("상담/진료 기록 내용: ");
 			String record = scanner.nextLine().trim();
+
 
 			if (prescription.isEmpty() || diagnosis.isEmpty() || record.isEmpty()) {
 				System.out.println("모든 내용을 입력해주세요.");
@@ -235,8 +233,8 @@ public class AppointmentRecord {
 
 	// 상담 기록 출력
 	static void printConsultation(ResultSet rs) throws SQLException {
-		System.out.printf("(%d) 환자ID: %d\t| 기관ID: %d\n처방: %s\t\t| 진단: %s\n내용: %s\n\n", rs.getInt("appointmentId"),
-				rs.getInt("userId"), rs.getInt("institutionId"), rs.getString("prescription"),
+		System.out.printf("(%d) 환자ID: %d\t| 기관ID: %d\t| 날짜: %s\n처방: %s\t\t| 진단: %s\n내용: %s\n\n", rs.getInt("appointmentId"),
+				rs.getInt("userId"), rs.getInt("institutionId"), rs.getDate("recordDate"), rs.getString("prescription"),
 				rs.getString("diagnosis"), rs.getString("record"));
 	}
 
