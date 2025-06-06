@@ -1,4 +1,5 @@
-// 상담 기록 기능 구현을 위한 class 파일입니다. 
+// 상담 기록 기능 구현을 위한 class 파일입니다.
+//날짜 형식 출력과 내원자의 트래킹 정보를 가져올 수 있도록 기능 추가했습니다!(트래킹 함수 사용)
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -64,6 +65,7 @@ public class AppointmentRecord {
 				System.out.println("2. 상담 기록 등록");
 				System.out.println("3. 상담 기록 수정");
 				System.out.println("4. 상담 기록 삭제");
+				System.out.println("5. 내원자 트래킹 전체 조회");
 				System.out.println("0. 이전으로");
 				System.out.print("선택: ");
 				int choice = scanner.nextInt();
@@ -81,6 +83,28 @@ public class AppointmentRecord {
 					break;
 				case 4:
 					deleteConsultation(conn, scanner);
+					break;
+				case 5:
+					System.out.print("조회할 내원자 ID를 입력하세요: ");
+					try {
+						int patientId = scanner.nextInt();
+						scanner.nextLine(); // 버퍼 비우기
+
+						// 환자 기관 ID와 의료인 기관 ID 비교
+						int patientInstitutionId = getPatientInstitutionId(conn, patientId);
+
+						if (patientInstitutionId == -1) {
+							System.out.println("해당 내원자의 정보가 존재하지 않습니다.");
+						} else if (patientInstitutionId != institutionId) {
+							System.out.println("[권한 없음] 해당 내원자는 소속 기관의 환자가 아닙니다.");
+						} else {
+							// 권한이 있는 경우에만 트래킹 기록을 조회
+							Tracking.getTracking(patientId);
+						}
+					} catch (Exception e) {
+						System.out.println("유효한 숫자 ID를 입력해주세요.");
+						scanner.nextLine(); // 잘못된 입력 버퍼 비우기
+					}
 					break;
 				case 0:
 					return;
@@ -106,6 +130,19 @@ public class AppointmentRecord {
 			}
 		}
 		return -1;
+	}
+	
+	// 환자 userId로 기관 id 조회
+	static int getPatientInstitutionId(Connection conn, int patientId) throws SQLException {
+		String sql = "SELECT institutionId FROM Tracking WHERE userId = ? LIMIT 1"; // 트래킹 기록 중 하나에서 기관 ID 가져오기
+		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setInt(1, patientId);
+			ResultSet rs = pstmt.executeQuery();
+			if (rs.next()) {
+				return rs.getInt("institutionId");
+			}
+		}
+		return -1; // 해당 환자 ID가 없거나 트래킹 기록이 없는 경우
 	}
 
 	// 기관 내 모든 상담 기록 조회(DoctorView로 제한)
@@ -237,6 +274,11 @@ public class AppointmentRecord {
 				rs.getInt("userId"), rs.getInt("institutionId"), rs.getDate("recordDate"), rs.getString("prescription"),
 				rs.getString("diagnosis"), rs.getString("record"));
 	}
+	
+	
+	
+	
+	
 
 	// 예외 처리 메소드들
 	private static void handleSQLException(String operation, SQLException e) {
