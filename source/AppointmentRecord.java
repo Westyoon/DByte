@@ -77,14 +77,14 @@ public class AppointmentRecord {
 					break;
 				case 2:
 					createAppointmentRecord(doctorId, scanner);
-					break; // ← 추가됨
+					break; 
 				case 3:
 					updateConsultation(conn, scanner);
 					break;
 				case 4:
 					deleteConsultation(conn, scanner);
 					break;
-				case 5:
+				case 5: // ← 추가됨
 					System.out.print("조회할 내원자 ID를 입력하세요: ");
 					try {
 						int patientId = scanner.nextInt();
