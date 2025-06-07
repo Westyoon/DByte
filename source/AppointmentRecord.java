@@ -144,6 +144,19 @@ public class AppointmentRecord {
 		}
 		return -1; // 해당 환자 ID가 없거나 트래킹 기록이 없는 경우
 	}
+	
+	// 상담 기록 appointmentId로 userId 조회
+	static int getPatientIdFromAppointment(Connection conn, int appointmentId) throws SQLException {
+		String sql = "SELECT userId FROM AppointmentRecord WHERE appointmentId = ?";
+		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			pstmt.setInt(1, appointmentId);
+			ResultSet rs = pstmt.executeQuery();
+			if (rs.next()) {
+				return rs.getInt("userId");
+			}
+		}
+		return -1; // 해당 appointmentId를 찾지 못한 경우
+	}
 
 	// 기관 내 모든 상담 기록 조회(DoctorView로 제한)
 	static void showConsultationsByInstitution(Connection conn, int institutionId) throws SQLException {
@@ -175,6 +188,11 @@ public class AppointmentRecord {
 			
 			System.out.print("처방 내용: ");
 			String prescription = scanner.nextLine().trim();
+			
+			if (hasAllergyConflict(conn, pId, prescription)) {
+				System.out.println("[경고] 환자가 해당 약물에 알레르기가 있어 처방할 수 없습니다.");
+				return;
+			}
 
 			System.out.print("상담/진료 기록 내용: ");
 			String record = scanner.nextLine().trim();
@@ -218,6 +236,13 @@ public class AppointmentRecord {
 		System.out.print("수정할 상담 아이디 (9____): ");
 		int id = scanner.nextInt();
 		scanner.nextLine();
+		
+		int pId = getPatientIdFromAppointment(conn, id);
+		if(pId == -1) {
+			System.out.println("해당 상담 아이디로 환자 정보를 찾을 수 없습니다.");
+			return;
+		}
+		
 		System.out.print("새 진단명: ");
 		String diagnosis = scanner.nextLine();
 		System.out.print("새 처방 약물: ");
@@ -226,7 +251,7 @@ public class AppointmentRecord {
 		String record = scanner.nextLine();
 
 		// 알레르기 확인
-		if (hasAllergyConflict(conn, id, prescription)) {
+		if (hasAllergyConflict(conn, pId, prescription)) {
 			System.out.println("[경고] 환자가 해당 약물에 알레르기가 있어 처방할 수 없습니다.");
 			return;
 		}
@@ -243,14 +268,14 @@ public class AppointmentRecord {
 	}
 
 	// 처방 약물 - 알레르기 충돌 검사
-	static boolean hasAllergyConflict(Connection conn, int appointmentId, String prescription) throws SQLException {
-		String sql = "SELECT p.allergy FROM Patient p JOIN AppointmentRecord ar ON p.userId = ar.userId WHERE ar.appointmentId = ?";
+	static boolean hasAllergyConflict(Connection conn, int patientId, String prescription) throws SQLException {
+		String sql = "SELECT allergy FROM Patient WHERE userId = ?";
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-			pstmt.setInt(1, appointmentId);
+			pstmt.setInt(1, patientId);
 			ResultSet rs = pstmt.executeQuery();
 			if (rs.next()) {
 				String allergy = rs.getString("allergy");
-				return allergy != null && allergy.toLowerCase().contains(prescription.toLowerCase());
+				return allergy != null && !allergy.trim().isEmpty() && prescription != null && allergy.toLowerCase().contains(prescription.toLowerCase().trim());
 			}
 		}
 		return false;
