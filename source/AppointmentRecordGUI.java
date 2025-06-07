@@ -1,4 +1,4 @@
-// AppointmentRecordGUI.java
+// 출력 text만 변경했습니다!
 package view;
 
 import view.AppointmentRecordsql;
@@ -100,7 +100,7 @@ public class AppointmentRecordGUI extends JFrame {
             String rec = recordField.getText().trim();
 
             boolean result = AppointmentRecordsql.insertRecord(userId, pid, presc, diag, rec);
-            JOptionPane.showMessageDialog(this, result ? "등록 완료!" : "등록 실패!");
+            JOptionPane.showMessageDialog(this, result ? "등록 완료!" : "등록 실패 - 알레르기 충돌 확인");
         }
     }
 
@@ -125,7 +125,7 @@ public class AppointmentRecordGUI extends JFrame {
             String rec = recordField.getText();
 
             boolean result = AppointmentRecordsql.updateRecord(id, diag, presc, rec);
-            JOptionPane.showMessageDialog(this, result ? "수정 완료!" : "수정 실패 또는 알레르기 충돌!");
+            JOptionPane.showMessageDialog(this, result ? "수정 완료!" : "수정 실패 - 알레르기 충돌 확인");
         }
     }
 
@@ -134,12 +134,12 @@ public class AppointmentRecordGUI extends JFrame {
         if (idStr != null) {
             int id = Integer.parseInt(idStr);
             boolean result = AppointmentRecordsql.deleteRecord(id);
-            JOptionPane.showMessageDialog(this, result ? "삭제 완료!" : "삭제 실패!");
+            JOptionPane.showMessageDialog(this, result ? "삭제 완료!" : "삭제 실패");
         }
     }
 
     public void getTrackingRecords() {
-        String input = JOptionPane.showInputDialog(this, "조회할 내원자 ID를 입력하세요:");
+        String input = JOptionPane.showInputDialog(this, "조회할 내원자 ID를 입력하세요.: ");
         if (input == null || input.isEmpty()) return;
 
         int patientId = Integer.parseInt(input);
@@ -169,7 +169,7 @@ public class AppointmentRecordGUI extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            String input = JOptionPane.showInputDialog(null, "사용자 ID를 입력하세요:");
+            String input = JOptionPane.showInputDialog(null, "사용자 ID를 입력하세요. :");
             if (input != null) {
                 try {
                     int userId = Integer.parseInt(input);
