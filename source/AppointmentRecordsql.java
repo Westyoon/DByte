@@ -1,3 +1,4 @@
+//등록할 때 알레르기 검사가 적용이 안되어서 알레르기 검사를 기존에는 기록id로 했는데 환자id로 변경해서 검사하도록 했습니다!!
 package view;
 
 import java.sql.*;
@@ -42,7 +43,12 @@ public class AppointmentRecordsql {
 
     public static boolean insertRecord(int doctorId, int patientId, String prescription, String diagnosis, String record) {
         try (Connection conn = DriverManager.getConnection(url, dbID, dbPW)) {
-            int instId = getInstitutionId(conn, doctorId);
+        	
+        	if (hasAllergyConflict(conn, patientId, prescription)) { // <-- 알레르기 충돌 검사 추가
+                return false; // 충돌 발생 시 false 반환
+            }
+        	
+        	int instId = getInstitutionId(conn, doctorId);
             if (instId == -1) return false;
 
             String sql = "INSERT INTO AppointmentRecord (userId, institutionId, prescription, diagnosis, recordDate, record) VALUES (?, ?, ?, ?, ?, ?)";
@@ -63,7 +69,8 @@ public class AppointmentRecordsql {
 
     public static boolean updateRecord(int appointmentId, String diagnosis, String prescription, String record) {
         try (Connection conn = DriverManager.getConnection(url, dbID, dbPW)) {
-            if (hasAllergyConflict(conn, appointmentId, prescription)) return false;
+            int patientId = getPatientIdFromAppointment (conn, appointmentId); // <-- 기록id로 유저id 가져오도록
+        	if (patientId == -1 || hasAllergyConflict(conn, patientId, prescription)) return false; // <-- 알레르기 충돌 검사 수정
 
             String sql = "UPDATE AppointmentRecord SET diagnosis = ?, prescription = ?, record = ? WHERE appointmentId = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -124,14 +131,17 @@ public class AppointmentRecordsql {
         }
     }
 
-    private static boolean hasAllergyConflict(Connection conn, int appointmentId, String prescription) throws SQLException {
-        String sql = "SELECT p.allergy FROM Patient p JOIN AppointmentRecord ar ON p.userId = ar.userId WHERE ar.appointmentId = ?";
+    private static boolean hasAllergyConflict(Connection conn, int patientId, String prescription) throws SQLException { // <-- 알레르기 충돌 검사 수정
+        String sql = "SELECT allergy FROM Patient WHERE userId = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, appointmentId);
+            pstmt.setInt(1, patientId);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 String allergy = rs.getString("allergy");
-                return allergy != null && allergy.toLowerCase().contains(prescription.toLowerCase());
+                return allergy != null 
+                        && !allergy.trim().isEmpty()
+                        && prescription != null
+                        && allergy.toLowerCase().contains(prescription.toLowerCase().trim());
             }
         }
         return false;
@@ -155,5 +165,14 @@ public class AppointmentRecordsql {
             if (rs.next()) return rs.getInt("institutionId");
         }
         return -1;
+    }
+    
+    private static int getPatientIdFromAppointment(Connection conn, int appointmentId) throws SQLException { // <-- 기록id로 환자id 가져오는 메소드 추가
+        String sql = "SELECT userId FROM AppointmentRecord WHERE appointmentId = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, appointmentId);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next() ? rs.getInt("userId") : -1;
+        }
     }
 }
