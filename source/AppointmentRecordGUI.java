@@ -1,183 +1,180 @@
-// 출력 text만 변경했습니다!
-package view;
+//등록할 때 알레르기 검사가 적용이 안되어서 알레르기 검사를 기존에는 기록id로 했는데 환자id로 변경해서 검사하도록 했습니다!!
+import java.sql.*;
+import java.util.ArrayList;
 
-import view.AppointmentRecordsql;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.ActionListener;
+public class AppointmentRecordGUI {
+    static final String dbID = "testuser";
+    static final String dbPW = "testpw";
+    static final String dbName = "mindlink";
+    static final String url = "jdbc:mysql://localhost:3306/" + dbName + "?useUnicode=true&characterEncoding=UTF-8";
+    
 
-public class AppointmentRecordGUI extends JFrame {
-    private JPanel contentPane;
-    private JTable table;
-    private DefaultTableModel tableModel;
-    private int userId;
-
-    public AppointmentRecordGUI(int userId) {
-        this.userId = userId;
-        setTitle("상담 기록 관리 시스템");
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setBounds(100, 100, 1200, 800);
-        contentPane = new JPanel();
-        contentPane.setBackground(new Color(245, 245, 245));
-        contentPane.setBorder(new EmptyBorder(10, 10, 10, 10));
-        setContentPane(contentPane);
-        contentPane.setLayout(null);
-
-        JLabel titleLabel = new JLabel("상담 기록 관리 시스템");
-        titleLabel.setFont(new Font("한컴 말랑말랑 Regular", Font.BOLD, 32));
-        titleLabel.setBounds(400, 10, 500, 50);
-        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        contentPane.add(titleLabel);
-
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setBounds(30, 80, 1120, 50);
-        buttonPanel.setLayout(new GridLayout(1, 6, 10, 0));
-        buttonPanel.setOpaque(false);
-        contentPane.add(buttonPanel);
-
-        JButton btnLoad = createButton("상담 기록 조회", e -> loadRecords());
-        JButton btnCreate = createButton("상담 기록 등록", e -> createRecord());
-        JButton btnUpdate = createButton("상담 기록 수정", e -> updateRecord());
-        JButton btnDelete = createButton("상담 기록 삭제", e -> deleteRecord());
-        JButton btnTrack = createButton("내원자 트래킹 조회", e -> getTrackingRecords());
-        JButton btnClose = createButton("닫기", e -> dispose());
-
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setBounds(30, 150, 1120, 600);
-        contentPane.add(scrollPane);
-
-        tableModel = new DefaultTableModel();
-        table = new JTable(tableModel);
-        table.setRowHeight(40);
-        scrollPane.setViewportView(table);
-
-        if (userId < 20000) { // 환자
-            loadRecords();
-        } else { // 의료인
-            buttonPanel.add(btnLoad);
-            buttonPanel.add(btnCreate);
-            buttonPanel.add(btnUpdate);
-            buttonPanel.add(btnDelete);
-            buttonPanel.add(btnTrack);
-            buttonPanel.add(btnClose);
-        }
-    }
-
-    private JButton createButton(String text, ActionListener listener) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("한컴 말랑말랑 Regular", Font.BOLD, 15));
-        btn.setFocusPainted(false);
-        btn.addActionListener(listener);
-        return btn;
-    }
-
-    public void loadRecords() {
-        Object[][] data = AppointmentRecordsql.getRecordsByUser(userId);
-        setTableColumns(new String[]{"기록ID", "환자ID", "기관ID", "날짜", "처방", "진단", "내용"});
-        updateTable(data);
-    }
-
-    public void createRecord() {
-        JTextField pidField = new JTextField();
-        JTextField diagField = new JTextField();
-        JTextField prescField = new JTextField();
-        JTextField recordField = new JTextField();
-
-        Object[] message = {
-            "환자 ID:", pidField,
-            "진단명:", diagField,
-            "처방:", prescField,
-            "상담 내용:", recordField
-        };
-
-        int option = JOptionPane.showConfirmDialog(this, message, "상담 기록 등록", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
-            int pid = Integer.parseInt(pidField.getText());
-            String diag = diagField.getText().trim();
-            String presc = prescField.getText().trim();
-            String rec = recordField.getText().trim();
-
-            boolean result = AppointmentRecordsql.insertRecord(userId, pid, presc, diag, rec);
-            JOptionPane.showMessageDialog(this, result ? "등록 완료!" : "등록 실패 - 알레르기 충돌 확인");
-        }
-    }
-
-    public void updateRecord() {
-        JTextField idField = new JTextField();
-        JTextField diagField = new JTextField();
-        JTextField prescField = new JTextField();
-        JTextField recordField = new JTextField();
-
-        Object[] message = {
-            "기록ID:", idField,
-            "진단명:", diagField,
-            "처방:", prescField,
-            "상담 내용:", recordField
-        };
-
-        int option = JOptionPane.showConfirmDialog(this, message, "기록 수정", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
-            int id = Integer.parseInt(idField.getText());
-            String diag = diagField.getText();
-            String presc = prescField.getText();
-            String rec = recordField.getText();
-
-            boolean result = AppointmentRecordsql.updateRecord(id, diag, presc, rec);
-            JOptionPane.showMessageDialog(this, result ? "수정 완료!" : "수정 실패 - 알레르기 충돌 확인");
-        }
-    }
-
-    public void deleteRecord() {
-        String idStr = JOptionPane.showInputDialog(this, "삭제할 상담 기록 ID:");
-        if (idStr != null) {
-            int id = Integer.parseInt(idStr);
-            boolean result = AppointmentRecordsql.deleteRecord(id);
-            JOptionPane.showMessageDialog(this, result ? "삭제 완료!" : "삭제 실패");
-        }
-    }
-
-    public void getTrackingRecords() {
-        String input = JOptionPane.showInputDialog(this, "조회할 내원자 ID를 입력하세요.: ");
-        if (input == null || input.isEmpty()) return;
-
-        int patientId = Integer.parseInt(input);
-        Object[][] data = AppointmentRecordsql.getTrackingRecords(userId, patientId);
-
-        if (data == null) {
-            JOptionPane.showMessageDialog(this, "해당 내원자 조회 권한이 없거나 회원 정보가 없습니다.");
-        } else if (data.length == 0) {
-            JOptionPane.showMessageDialog(this, "해당 사용자의 트래킹 기록이 없습니다.");
+    public static Object[][] getRecordsByUser(int userId) {
+        String sql;
+        boolean isDoctor = userId >= 20000;
+        if (isDoctor) {
+            sql = "SELECT * FROM DoctorView WHERE institutionId = (SELECT institutionId FROM Medical WHERE userId = ?) ORDER BY recordDate ASC";
         } else {
-            setTableColumns(new String[]{"날짜", "기관ID", "감정점수", "수면시간", "운동", "운동시간", "한 마디"});
-            updateTable(data);
+            sql = "SELECT * FROM PatientView WHERE userId = ? ORDER BY recordDate ASC";
         }
-    }
-
-    private void setTableColumns(String[] columns) {
-        tableModel.setColumnIdentifiers(columns);
-        tableModel.setRowCount(0);
-    }
-
-    private void updateTable(Object[][] data) {
-        tableModel.setRowCount(0);
-        for (Object[] row : data) {
-            tableModel.addRow(row);
-        }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            String input = JOptionPane.showInputDialog(null, "사용자 ID를 입력하세요. :");
-            if (input != null) {
-                try {
-                    int userId = Integer.parseInt(input);
-                    new AppointmentRecordGUI(userId).setVisible(true);
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(null, "유효한 숫자를 입력해주세요.", "입력 오류", JOptionPane.ERROR_MESSAGE);
-                }
+        try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userId);
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<Object[]> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(new Object[]{
+                        rs.getInt("appointmentId"),
+                        rs.getInt("userId"),
+                        rs.getInt("institutionId"),
+                        rs.getDate("recordDate"),
+                        rs.getString("prescription"),
+                        rs.getString("diagnosis"),
+                        rs.getString("record")
+                });
             }
-        });
+            return list.toArray(new Object[0][]);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new Object[0][0];
+        }
+    }
+
+    public static boolean insertRecord(int doctorId, int patientId, String prescription, String diagnosis, String record) {
+        try (Connection conn = DriverManager.getConnection(url, dbID, dbPW)) {
+        	if (hasAllergyConflict(patientId, prescription)) { // <-- 알레르기 충돌 검사 추가
+                return false; // 충돌 발생 시 false 반환
+            }
+        	
+        	int instId = getInstitutionId(doctorId);
+            if (instId == -1) return false;
+
+            String sql = "INSERT INTO AppointmentRecord (userId, institutionId, prescription, diagnosis, recordDate, record) VALUES (?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, patientId);
+                pstmt.setInt(2, instId);
+                pstmt.setString(3, prescription);
+                pstmt.setString(4, diagnosis);
+                pstmt.setDate(5, new java.sql.Date(System.currentTimeMillis()));
+                pstmt.setString(6, record);
+                return pstmt.executeUpdate() > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean updateRecord(int appointmentId, String diagnosis, String prescription, String record) {
+        try (Connection conn = DriverManager.getConnection(url, dbID, dbPW)) {
+            int patientId = getPatientIdFromAppointment (appointmentId); // <-- 기록id로 유저id 가져오도록
+        	if (patientId == -1 || hasAllergyConflict(patientId, prescription)) return false; // <-- 알레르기 충돌 검사 수정
+
+            String sql = "UPDATE AppointmentRecord SET diagnosis = ?, prescription = ?, record = ? WHERE appointmentId = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, diagnosis);
+                pstmt.setString(2, prescription);
+                pstmt.setString(3, record);
+                pstmt.setInt(4, appointmentId);
+                return pstmt.executeUpdate() > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean deleteRecord(int appointmentId) {
+        try (Connection conn = DriverManager.getConnection(url, dbID, dbPW)) {
+            String sql = "DELETE FROM AppointmentRecord WHERE appointmentId = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, appointmentId);
+                return pstmt.executeUpdate() > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static Object[][] getTrackingRecords(int doctorId, int patientId) {
+        try (Connection conn = DriverManager.getConnection(url, dbID, dbPW)) {
+            int doctorInstId = getInstitutionId(doctorId);
+            int patientInstId = getPatientInstitutionId(patientId);
+
+            if (doctorInstId != patientInstId || patientInstId == -1) return null;
+
+            String sql = "SELECT * FROM Tracking WHERE userId = ? ORDER BY date ASC";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, patientId);
+                ResultSet rs = pstmt.executeQuery();
+                ArrayList<Object[]> list = new ArrayList<>();
+                while (rs.next()) {
+                    String exerciseName = rs.getString("exerciseName");
+                    list.add(new Object[]{
+                            rs.getTimestamp("date"),
+                            rs.getInt("institutionId"),
+                            rs.getInt("feeling"),
+                            rs.getInt("sleeping"),
+                            (exerciseName == null || exerciseName != null) ? "" : exerciseName,
+                            (exerciseName == null || exerciseName != null) ? "" : rs.getDouble("exerciseTime"),
+                            rs.getString("comment")
+                    });
+                }
+                return list.toArray(new Object[0][]);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static boolean hasAllergyConflict(int patientId, String prescription) throws SQLException { // <-- 알레르기 충돌 검사 수정
+        String sql = "SELECT allergies FROM Patient WHERE userId = ?";
+        Connection conn = DriverManager.getConnection(url, dbID, dbPW);
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, patientId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                String allergy = rs.getString("allergies");
+                return allergy != null 
+                        && !allergy.trim().isEmpty()
+                        && prescription != null
+                        && allergy.toLowerCase().contains(prescription.toLowerCase().trim());
+            }
+        }
+        return false;
+    }
+
+    private static int getInstitutionId(int doctorId) throws SQLException {
+        String sql = "SELECT institutionId FROM Medical WHERE userId = ?";
+        Connection conn = DriverManager.getConnection(url, dbID, dbPW);
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, doctorId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) return rs.getInt("institutionId");
+        }
+        return -1;
+    }
+
+    private static int getPatientInstitutionId(int patientId) throws SQLException {
+        String sql = "SELECT institutionId FROM Tracking WHERE userId = ? LIMIT 1";
+        Connection conn = DriverManager.getConnection(url, dbID, dbPW);
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, patientId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) return rs.getInt("institutionId");
+        }
+        return -1;
+    }
+    
+    private static int getPatientIdFromAppointment(int appointmentId) throws SQLException { // <-- 기록id로 환자id 가져오는 메소드 추가
+    	Connection conn = DriverManager.getConnection(url, dbID, dbPW);
+    	String sql = "SELECT userId FROM AppointmentRecord WHERE appointmentId = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, appointmentId);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next() ? rs.getInt("userId") : -1;
+        }
     }
 }
