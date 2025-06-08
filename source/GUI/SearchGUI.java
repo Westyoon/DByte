@@ -1,8 +1,6 @@
-package search;
 import java.sql.*;
 import java.util.ArrayList;
 
-import view.Gui;
 
 public class SearchGUI {
 	static final String userID = "testuser";
@@ -72,7 +70,4 @@ public class SearchGUI {
 		return getResult(sql, null, 4);
 	}
 	
-	public static void main(String[] args) {
-		Gui gui = new Gui();
-	}
 }
