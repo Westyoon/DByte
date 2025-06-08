@@ -464,12 +464,16 @@ public class MainGUI extends JFrame {
 
 				buttons[6].setVisible(false);
 				buttons[0].addActionListener(e -> {
-					Object[][] data = AppointmentRecordGUI.getRecordsByUser(userId);
 					clearTable();
+					Object[][] data = AppointmentRecordGUI.getRecordsByUser(userId);
 					tableModel.setColumnIdentifiers(new String[] { "기록ID", "환자ID", "기관ID", "날짜", "처방", "진단", "내용" });
 					updateTable(data);
 				});
 				buttons[1].addActionListener(e -> {
+					clearTable();
+					Object[][] data = AppointmentRecordGUI.getRecordsByUser(userId);
+					tableModel.setColumnIdentifiers(new String[] { "기록ID", "환자ID", "기관ID", "날짜", "처방", "진단", "내용" });
+					updateTable(data);
 					JTextField pidField = new JTextField();
 					JTextField diagField = new JTextField();
 					JTextField prescField = new JTextField();
@@ -489,11 +493,15 @@ public class MainGUI extends JFrame {
 						JOptionPane.showMessageDialog(this, result ? "등록 완료!" : "등록 실패 - 알레르기 충돌 확인");
 					}
 					clearTable();
-					Object[][] data = AppointmentRecordGUI.getRecordsByUser(userId);
+					data = AppointmentRecordGUI.getRecordsByUser(userId);
 					tableModel.setColumnIdentifiers(new String[] { "기록ID", "환자ID", "기관ID", "날짜", "처방", "진단", "내용" });
 					updateTable(data);
 				});
 				buttons[2].addActionListener(e -> {
+					clearTable();
+					Object[][] data = AppointmentRecordGUI.getRecordsByUser(userId);
+					tableModel.setColumnIdentifiers(new String[] { "기록ID", "환자ID", "기관ID", "날짜", "처방", "진단", "내용" });
+					updateTable(data);
 					JTextField idField = new JTextField();
 					JTextField diagField = new JTextField();
 					JTextField prescField = new JTextField();
@@ -512,20 +520,23 @@ public class MainGUI extends JFrame {
 						boolean result = AppointmentRecordGUI.updateRecord(id, diag, presc, rec);
 						JOptionPane.showMessageDialog(this, result ? "수정 완료!" : "수정 실패 - 알레르기 충돌 확인");
 					}
-					Object[][] data = AppointmentRecordGUI.getRecordsByUser(userId);
+					data = AppointmentRecordGUI.getRecordsByUser(userId);
 					clearTable();
 					tableModel.setColumnIdentifiers(new String[] { "기록ID", "환자ID", "기관ID", "날짜", "처방", "진단", "내용" });
 					updateTable(data);
 				});
 				buttons[3].addActionListener(e -> {
 					clearTable();
+					Object[][] data = AppointmentRecordGUI.getRecordsByUser(userId);
+					tableModel.setColumnIdentifiers(new String[] { "기록ID", "환자ID", "기관ID", "날짜", "처방", "진단", "내용" });
+					updateTable(data);
 					String idStr = JOptionPane.showInputDialog(this, "삭제할 상담 기록 ID:");
 					if (idStr != null) {
 						int id = Integer.parseInt(idStr);
 						boolean result = AppointmentRecordGUI.deleteRecord(id);
 						JOptionPane.showMessageDialog(this, result ? "삭제 완료!" : "삭제 실패");
 					}
-					Object[][] data = AppointmentRecordGUI.getRecordsByUser(userId);
+					data = AppointmentRecordGUI.getRecordsByUser(userId);
 					clearTable();
 					tableModel.setColumnIdentifiers(new String[] { "기록ID", "환자ID", "기관ID", "날짜", "처방", "진단", "내용" });
 					updateTable(data);
