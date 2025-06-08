@@ -47,7 +47,7 @@ public class TrackingGUI {
 
 	public static Object[][] getTracking(int userId) {
 		String sql = "SELECT * FROM tracking WHERE userId = ? ORDER BY date ASC";
-		return getResult(sql, new Object[] { userId }, 8);
+		return getResult(sql, new Object[] { userId }, 9);
 	}
 
 	public static boolean registerTracking(int userId, int institutionId, int sleeping, int feeling,
@@ -91,10 +91,10 @@ public class TrackingGUI {
 		}
 	}
 
-	public static boolean updateTracking(int userId, int institutionId, LocalDateTime date, int feeling, int sleeping,
+	public static boolean updateTracking(int userId, int tId, int feeling, int sleeping,
 			String exerciseName, Double exerciseTime, String comment) {
 		String sql = "UPDATE tracking SET feeling = ?, sleeping = ?, exerciseName = ?, exerciseTime = ?, comment = ? "
-				+ "WHERE userId = ? AND institutionId = ? AND date = ?";
+				+ "WHERE userId = ? AND trackingId = ?";
 
 		try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
 				PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -121,9 +121,8 @@ public class TrackingGUI {
 			}
 
 			pstmt.setInt(6, userId);
-			pstmt.setInt(7, institutionId);
-			pstmt.setTimestamp(8, Timestamp.valueOf(date));
-
+			pstmt.setInt(7, tId);
+			
 			return pstmt.executeUpdate() > 0;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -131,15 +130,14 @@ public class TrackingGUI {
 		}
 	}
 
-	public static boolean deleteTracking(int userId, int institutionId, LocalDateTime date) {
-		String sql = "DELETE FROM tracking WHERE userId = ? AND institutionId = ? AND date = ?";
+	public static boolean deleteTracking(int userId, int tId) {
+		String sql = "DELETE FROM tracking WHERE userId = ? AND trackingId = ?";
 
 		try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
 				PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
 			pstmt.setInt(1, userId);
-			pstmt.setInt(2, institutionId);
-			pstmt.setTimestamp(3, Timestamp.valueOf(date));
+			pstmt.setInt(2, tId);
 
 			return pstmt.executeUpdate() > 0;
 		} catch (SQLException e) {
