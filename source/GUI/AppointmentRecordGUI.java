@@ -1,4 +1,9 @@
 //코드 보고서 작성 중에 limit 1이 애매해서 order by 옵션만 추가 했습니다!
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class AppointmentRecordGUI {
