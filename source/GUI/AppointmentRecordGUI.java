@@ -1,4 +1,3 @@
-//코드 보고서 작성 중에 limit 1이 애매해서 order by 옵션만 추가 했습니다!
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -46,8 +45,8 @@ public class AppointmentRecordGUI {
 
     public static boolean insertRecord(int doctorId, int patientId, String prescription, String diagnosis, String record) {
         try (Connection conn = DriverManager.getConnection(url, dbID, dbPW)) {
-        	if (hasAllergyConflict(patientId, prescription)) { // <-- 알레르기 충돌 검사 추가
-                return false; // 충돌 발생 시 false 반환
+        	if (hasAllergyConflict(patientId, prescription)) {
+                return false;
             }
         	
         	int instId = getInstitutionId(doctorId);
@@ -71,8 +70,8 @@ public class AppointmentRecordGUI {
 
     public static boolean updateRecord(int appointmentId, String diagnosis, String prescription, String record) {
         try (Connection conn = DriverManager.getConnection(url, dbID, dbPW)) {
-            int patientId = getPatientIdFromAppointment (appointmentId); // <-- 기록id로 유저id 가져오도록
-        	if (patientId == -1 || hasAllergyConflict(patientId, prescription)) return false; // <-- 알레르기 충돌 검사 수정
+            int patientId = getPatientIdFromAppointment (appointmentId);
+        	if (patientId == -1 || hasAllergyConflict(patientId, prescription)) return false;
 
             String sql = "UPDATE AppointmentRecord SET diagnosis = ?, prescription = ?, record = ? WHERE appointmentId = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -133,7 +132,7 @@ public class AppointmentRecordGUI {
         }
     }
 
-    private static boolean hasAllergyConflict(int patientId, String prescription) throws SQLException { // <-- 알레르기 충돌 검사 수정
+    private static boolean hasAllergyConflict(int patientId, String prescription) throws SQLException {
         String sql = "SELECT allergy FROM Patient WHERE userId = ?";
         Connection conn = DriverManager.getConnection(url, dbID, dbPW);
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -172,7 +171,7 @@ public class AppointmentRecordGUI {
         return -1;
     }
     
-    private static int getPatientIdFromAppointment(int appointmentId) throws SQLException { // <-- 기록id로 환자id 가져오는 메소드 추가
+    private static int getPatientIdFromAppointment(int appointmentId) throws SQLException {
     	Connection conn = DriverManager.getConnection(url, dbID, dbPW);
     	String sql = "SELECT userId FROM AppointmentRecord WHERE appointmentId = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
