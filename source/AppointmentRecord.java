@@ -76,7 +76,7 @@ public class AppointmentRecord {
 					showConsultationsByInstitution(conn, institutionId);
 					break;
 				case 2:
-					createAppointmentRecord(doctorId, scanner);
+					createAppointmentRecord(conn, doctorId, scanner);
 					break; 
 				case 3:
 					updateConsultation(conn, scanner);
@@ -134,7 +134,7 @@ public class AppointmentRecord {
 	
 	// 환자 userId로 기관 id 조회
 	static int getPatientInstitutionId(Connection conn, int patientId) throws SQLException {
-		String sql = "SELECT institutionId FROM Tracking WHERE userId = ? LIMIT 1"; // 트래킹 기록 중 하나에서 기관 ID 가져오기
+		String sql = "SELECT institutionId FROM Tracking WHERE userId = ? ORDER BY date DESC LIMIT 1;"; // 트래킹 기록 중 하나에서 최신 기관 ID 가져오기
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setInt(1, patientId);
 			ResultSet rs = pstmt.executeQuery();
@@ -175,8 +175,8 @@ public class AppointmentRecord {
 		}
 	}
 
-	static void createAppointmentRecord(int userId, Scanner scanner) {
-		try (Connection conn = DriverManager.getConnection(url, dbID, dbPW)) {
+	static void createAppointmentRecord(Connection conn, int userId, Scanner scanner) {
+		try {
 
 			// 사용자 입력
 			System.out.print("내원자 아이디: ");
