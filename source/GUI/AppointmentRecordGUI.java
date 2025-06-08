@@ -1,5 +1,4 @@
-//등록할 때 알레르기 검사가 적용이 안되어서 알레르기 검사를 기존에는 기록id로 했는데 환자id로 변경해서 검사하도록 했습니다!!
-import java.sql.*;
+//코드 보고서 작성 중에 limit 1이 애매해서 order by 옵션만 추가 했습니다!
 import java.util.ArrayList;
 
 public class AppointmentRecordGUI {
