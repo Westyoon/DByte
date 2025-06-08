@@ -61,7 +61,7 @@ public class InstitutionReview {
             ") " +
             "SELECT reviewId, userId, institutionId, content, rating, formattedDate, " +
             "       institutionAvg, " +
-            "       RANK() OVER (ORDER BY institutionAvg DESC) AS institutionRank " +
+            "       DENSE_RANK() OVER (ORDER BY institutionAvg DESC) AS institutionRank " +
             "  FROM reviewWithAvg " +
             "ORDER BY institutionAvg DESC, formattedDate DESC";
 
@@ -167,7 +167,7 @@ public class InstitutionReview {
         }
     }
 
-    // 5. 기관별 리뷰 통계 조회 (GROUP BY/HAVING)
+    // 5. 기관별 리뷰 통계 조회 
     static void selectByInstitutionGroup(Scanner scanner) {
         System.out.print("기관 ID를 입력하세요: ");
         int institutionId = scanner.nextInt();
