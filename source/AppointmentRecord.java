@@ -28,7 +28,7 @@ public class AppointmentRecord {
 
 	// 환자: 본인 상담 기록 조회
 	static void showPatientConsultations(int patientId) {
-		String sql = "SELECT * FROM PatientView WHERE userId = ? ORDER BY recordDate DESC";
+		String sql = "SELECT * FROM PatientView WHERE userId = ? ORDER BY recordDate ASC";
 		try (Connection conn = DriverManager.getConnection(url, dbID, dbPW);
 				PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -160,7 +160,7 @@ public class AppointmentRecord {
 
 	// 기관 내 모든 상담 기록 조회(DoctorView로 제한)
 	static void showConsultationsByInstitution(Connection conn, int institutionId) throws SQLException {
-		String sql = "SELECT * FROM DoctorView WHERE institutionId = ? ORDER BY recordDate DESC";
+		String sql = "SELECT * FROM DoctorView WHERE institutionId = ? ORDER BY recordDate ASC";
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setInt(1, institutionId);
 			ResultSet rs = pstmt.executeQuery();
