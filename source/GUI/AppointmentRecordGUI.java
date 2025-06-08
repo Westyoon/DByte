@@ -158,7 +158,7 @@ public class AppointmentRecordGUI {
     }
 
     private static int getPatientInstitutionId(int patientId) throws SQLException {
-        String sql = "SELECT institutionId FROM Tracking WHERE userId = ? LIMIT 1";
+        String sql = "SELECT institutionId FROM Tracking WHERE userId = ? ORDER BY date DESC LIMIT 1";
         Connection conn = DriverManager.getConnection(url, dbID, dbPW);
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, patientId);
