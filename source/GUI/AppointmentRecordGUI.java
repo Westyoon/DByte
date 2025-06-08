@@ -104,7 +104,7 @@ public class AppointmentRecordGUI {
 
             if (doctorInstId != patientInstId || patientInstId == -1) return null;
 
-            String sql = "SELECT * FROM Tracking WHERE userId = ? ORDER BY date ASC";
+            String sql = "SELECT * FROM Tracking WHERE userId = ? ORDER BY date DESC";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, patientId);
                 ResultSet rs = pstmt.executeQuery();
@@ -130,13 +130,13 @@ public class AppointmentRecordGUI {
     }
 
     private static boolean hasAllergyConflict(int patientId, String prescription) throws SQLException { // <-- 알레르기 충돌 검사 수정
-        String sql = "SELECT allergies FROM Patient WHERE userId = ?";
+        String sql = "SELECT allergy FROM Patient WHERE userId = ?";
         Connection conn = DriverManager.getConnection(url, dbID, dbPW);
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, patientId);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                String allergy = rs.getString("allergies");
+                String allergy = rs.getString("allergy");
                 return allergy != null 
                         && !allergy.trim().isEmpty()
                         && prescription != null
