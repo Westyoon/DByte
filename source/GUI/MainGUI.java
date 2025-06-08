@@ -194,6 +194,8 @@ public class MainGUI extends JFrame {
 		} else {
 			JOptionPane.showMessageDialog(frame, "로그인 상태가 아닙니다.", "오류", JOptionPane.ERROR_MESSAGE);
 		}
+		clearUI();
+		clearTable();
 	}
 	
 	private void clearButtonListeners() {
@@ -590,7 +592,7 @@ public class MainGUI extends JFrame {
 				JOptionPane.showMessageDialog(frame, "로그인 상태가 아닙니다.", "오류", JOptionPane.ERROR_MESSAGE);
 			} else {
 				tableModel.setColumnIdentifiers(
-						new String[] { "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
+				new String[] { "트래킹 아이디", "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
 				Object[][] data = TrackingGUI.getTracking(userId);
 				updateTable(data);
 			}
@@ -599,7 +601,7 @@ public class MainGUI extends JFrame {
 		buttons[1].addActionListener(e -> {
 			clearTable();
 			tableModel.setColumnIdentifiers(
-			new String[] { "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
+			new String[] { "트래킹 아이디", "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
 			Object[][] data = TrackingGUI.getTracking(userId);
 			updateTable(data);
 			if (userId == -1) {
@@ -645,7 +647,7 @@ public class MainGUI extends JFrame {
 					clearTable();
 					data = TrackingGUI.getTracking(userId);
 					tableModel.setColumnIdentifiers(
-							new String[] { "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
+					new String[] { "트래킹 아이디", "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
 					updateTable(data);
 				} catch (Exception ex) {
 					JOptionPane.showMessageDialog(frame, "입력 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
@@ -656,7 +658,7 @@ public class MainGUI extends JFrame {
 		buttons[2].addActionListener(e -> {
 			clearTable();
 			tableModel.setColumnIdentifiers(
-			new String[] { "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
+					new String[] { "트래킹 아이디", "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
 			Object[][] data = TrackingGUI.getTracking(userId);
 			updateTable(data);
 			if (userId == -1) {
@@ -665,23 +667,21 @@ public class MainGUI extends JFrame {
 			}
 
 			try {
-				JTextField institutionIdField = new JTextField();
-				JTextField dateField = new JTextField();
+				JTextField tIdField = new JTextField();
 				JTextField feelingField = new JTextField();
 				JTextField sleepingField = new JTextField();
 				JTextField exerciseNameField = new JTextField();
 				JTextField exerciseTimeField = new JTextField();
 				JTextField commentField = new JTextField();
 
-				Object[] message = { "기관 ID*:", institutionIdField, "수정할 날짜 (yyyy-MM-dd HH:mm:ss)*:", dateField,
+				Object[] message = { "트래킹 ID*:", tIdField,
 						"감정 점수 (1-100)*:", feelingField, "수면 시간*:", sleepingField, "운동 이름:", exerciseNameField,
 						"운동 시간:", exerciseTimeField, "한 문장 메모:", commentField };
 
 				int option = JOptionPane.showConfirmDialog(frame, message, "트래킹 수정", JOptionPane.OK_CANCEL_OPTION);
 
 				if (option == JOptionPane.OK_OPTION) {
-					int institutionId = Integer.parseInt(institutionIdField.getText());
-					LocalDateTime date = LocalDateTime.parse(dateField.getText().replace(" ", "T"));
+					int tId = Integer.parseInt(tIdField.getText());
 					int feeling = Integer.parseInt(feelingField.getText());
 					int sleeping = Integer.parseInt(sleepingField.getText());
 
@@ -697,14 +697,14 @@ public class MainGUI extends JFrame {
 
 					String comment = commentRaw.isEmpty() ? null : commentRaw;
 
-					boolean result = TrackingGUI.updateTracking(userId, institutionId, date, feeling, sleeping,
+					boolean result = TrackingGUI.updateTracking(userId, tId, feeling, sleeping,
 							exerciseName, exerciseTime, comment);
 					JOptionPane.showMessageDialog(frame, result ? "수정 완료!" : "수정 실패!");
 
 					// 테이블 갱신
 					clearTable();
 					tableModel.setColumnIdentifiers(
-							new String[] { "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
+							new String[] { "트래킹 아이디", "유저 ID", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
 					data = TrackingGUI.getTracking(userId);
 					updateTable(data);
 				}
@@ -717,36 +717,31 @@ public class MainGUI extends JFrame {
 		buttons[3].addActionListener(e -> {
 		    clearTable();
 		    tableModel.setColumnIdentifiers(
-		        new String[] { "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
+		    		new String[] { "트래킹 아이디", "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트" });
 		    Object[][] data = TrackingGUI.getTracking(userId);
 		    updateTable(data);
 
 		    // 날짜 & 기관 ID 입력받기
-		    JTextField dateField = new JTextField();
-		    JTextField institutionIdField = new JTextField();
+		    JTextField tIdField = new JTextField();
 
 		    Object[] message = {
-		        "삭제할 날짜를 입력하세요 (예: 2025-06-08 14:00:00):", dateField,
-		        "삭제할 기관 ID를 입력하세요:", institutionIdField
-		    };
+		        "삭제하고자 하는 트래킹의 아이디를 입력하세요:", tIdField };
 
 		    int option = JOptionPane.showConfirmDialog(frame, message, "트래킹 삭제", JOptionPane.OK_CANCEL_OPTION);
 		    if (option != JOptionPane.OK_OPTION) return;
 
 		    try {
-		        String dateStr = dateField.getText().trim();
-		        int institutionId = Integer.parseInt(institutionIdField.getText().trim());
-		        LocalDateTime date = LocalDateTime.parse(dateStr.replace(" ", "T")); // 날짜 변환
-
+		        int tId = Integer.parseInt(tIdField.getText());
+		        
 		        int confirm = JOptionPane.showConfirmDialog(frame, "정말 삭제하시겠습니까?", "확인", JOptionPane.YES_NO_OPTION);
 		        if (confirm != JOptionPane.YES_OPTION) return;
 
-		        boolean result = TrackingGUI.deleteTracking(userId, institutionId, date);
+		        boolean result = TrackingGUI.deleteTracking(userId, tId);
 
 		        if (result) {
 		            JOptionPane.showMessageDialog(frame, "삭제 완료!");
 		            clearTable();
-		            tableModel.setColumnIdentifiers(new String[] {
+		            tableModel.setColumnIdentifiers(new String[] { "트래킹 아이디",
 		                "유저 아이디", "기관 아이디", "날짜", "감정", "수면시간", "운동 이름", "운동 시간", "코멘트"
 		            });
 		            data = TrackingGUI.getTracking(userId);
