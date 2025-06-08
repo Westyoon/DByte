@@ -147,20 +147,22 @@ public class TrackingGUI {
 	}
 
 	public static Object[][] analyzeTracking() {
-	    String sql =
-	        "SELECT " +
-	        "  CASE WHEN GROUPING(userId) = 1 THEN '전체' ELSE CAST(userId AS CHAR) END AS userLabel, " +
-	        "  ROUND(AVG(sleeping), 2) AS avgSleeping, " +
-	        "  ROUND(AVG(exerciseTime), 2) AS avgExerciseTime, " +
-	        "  SUM(sleeping) AS totalSleeping, " +
-	        "  SUM(exerciseTime) AS totalExerciseTime, " +
-	        "  GROUPING(userId) AS isTotal " +  // 정렬용 컬럼
-	        "FROM tracking " +
-	        "GROUP BY userId WITH ROLLUP " +
-	        "ORDER BY isTotal ASC";  // 일반 사용자 → 전체 (isTotal=1)
+		String sql =
+			    "SELECT " +
+			    "  CASE WHEN GROUPING(institutionId) = 1 THEN '전체' ELSE CAST(institutionId AS CHAR) END AS institutionLabel, " +
+			    "  CASE WHEN GROUPING(userId) = 1 THEN '--' ELSE CAST(userId AS CHAR) END AS userLabel, " +
+			    "  ROUND(AVG(sleeping), 2) AS avgSleeping, " +
+			    "  ROUND(AVG(exerciseTime), 2) AS avgExerciseTime, " +
+			    "  SUM(sleeping) AS totalSleeping, " +
+			    "  SUM(exerciseTime) AS totalExerciseTime, " +
+			    "  GROUPING(institutionId) AS grpInstitution, " +
+			    "  GROUPING(userId) AS grpUser " +
+			    "FROM tracking " +
+			    "GROUP BY ROLLUP(institutionId, userId) " +
+			    "ORDER BY grpInstitution ASC, institutionLabel ASC, grpUser ASC";
 
-	    // 열 수가 5개니까 count = 5
-	    return getResult(sql, null, 5);
+
+	    return getResult(sql, null, 6);
 	}
 
 
