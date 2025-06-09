@@ -16,7 +16,7 @@ public class AppointmentRecordGUI {
         String sql;
         boolean isDoctor = userId >= 20000;
         if (isDoctor) {
-            sql = "SELECT * FROM DoctorView WHERE institutionId = (SELECT institutionId FROM Medical WHERE userId = ?) ORDER BY recordDate ASC";
+            sql = "SELECT DISTINCT * FROM DoctorView WHERE institutionId = (SELECT institutionId FROM Medical WHERE userId = ?) ORDER BY recordDate ASC;";
         } else {
             sql = "SELECT * FROM PatientView WHERE userId = ? ORDER BY recordDate ASC";
         }
