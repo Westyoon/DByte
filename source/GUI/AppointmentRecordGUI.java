@@ -112,18 +112,18 @@ public class AppointmentRecordGUI {
                 pstmt.setInt(1, patientId);
                 ResultSet rs = pstmt.executeQuery();
                 ArrayList<Object[]> list = new ArrayList<>();
-                while (rs.next()) {
+              while (rs.next()) {
                     String exerciseName = rs.getString("exerciseName");
                     list.add(new Object[]{
                             rs.getTimestamp("date"),
                             rs.getInt("institutionId"),
                             rs.getInt("feeling"),
                             rs.getInt("sleeping"),
-                            (exerciseName == null || exerciseName != null) ? "" : exerciseName,
-                            (exerciseName == null || exerciseName != null) ? "" : rs.getDouble("exerciseTime"),
+                            (exerciseName == null) ? "" : exerciseName,
+                            (exerciseName == null) ? "" : rs.getDouble("exerciseTime"),
                             rs.getString("comment")
                     });
-                }
+              }
                 return list.toArray(new Object[0][]);
             }
         } catch (Exception e) {
